@@ -89,7 +89,7 @@ sf::Vector2f RoundSolidObject::distance(StaticRect & target)
 	float y0 = target.getPosition().y;
 	float x10 = this->getCenter().x;
 	float y10 = this->getCenter().y;
-	float k = tan(target.getAngle);
+	float k = tan(target.getAngle());
 	float x = (y10 - y0 + k * x0 + 1 / k * x10) / (k + 1 / k);
 	float y = k * x + y0 - k * x0;
 	sf::Vector2f distance = sf::Vector2f(x, y) - this->getCenter();
