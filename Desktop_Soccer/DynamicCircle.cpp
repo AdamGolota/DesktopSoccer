@@ -31,18 +31,23 @@ void DynamicCircle::move()
 
 void DynamicCircle::hit(StaticCircle & barrier)
 {
+	sf::Vector2f d = this->distance(barrier);
+	float rs = this->getRadius() + barrier.getRadius();						//	Radius sum
+	this->setCenter(this->center + d * ( 1 - rs / length(d)));
 	this->setVelocity(this->postStaticHitVelocity(this->distance(barrier)));
 }
 
 void DynamicCircle::hit(StaticRect & barrier)
 {
+	sf::Vector2f d = this->distance(barrier);
+	this->setCenter(this->center + d * (1 - this->getRadius() / length(d)));
 	this->setVelocity(this->postStaticHitVelocity(this->distance(barrier)));
 }
 
 void DynamicCircle::slowDown()
 {	
-	float al = this->frictionCoefficient*this->M;	// acceleration length
-	sf::Vector2f v = this->velocity;				// velocity
+	float al = this->frictionCoefficient*this->M;					// acceleration length
+	sf::Vector2f v = this->velocity;								// velocity
 	float vl = length(this->velocity);
 	sf::Vector2f a = v * (al / vl);
 	if (vl > al)
@@ -55,11 +60,11 @@ void DynamicCircle::slowDown()
 
 void DynamicCircle::pushInDirection(sf::Vector2f point)
 {
-	const float dk = 25.f;										// distance coefficient
+	const float dk = 25.f;											// distance coefficient
 	sf::Vector2f d = this->distance(point);				
 	float dl = length(d) / dk;								
 	float mv = this->maxVelocity;
-	float vl = sqrt(dl > mv ? mv*mv: dl * mv);			//Velocity length		
+	float vl = sqrt(dl > mv ? mv*mv: dl * mv);						//Velocity length		
 	this->setVelocity(d / dk * (vl / dl));	
 }
 
@@ -185,7 +190,9 @@ sf::Vector2f postHitVelocity(DynamicCircle & object, DynamicCircle & target)
 
 void hit(DynamicCircle& object, DynamicCircle& target)
 {
-	
+	sf::Vector2f d = object.distance(target);
+	float rs = object.getRadius() + target.getRadius();						//	Radius sum
+	object.setCenter(object.center + d * (1 - rs / length(d)));
 	sf::Vector2f ov = postHitVelocity(object, target);						// New object velocity
 	sf::Vector2f tv = postHitVelocity(target, object);						// New target velocity
 	object.setVelocity(ov);
