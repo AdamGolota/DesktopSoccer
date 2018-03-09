@@ -14,7 +14,7 @@ const int GW = Y / 20;				// Goal width
 const int GP = Y / 2.75 - GW / 2;	// Goal position
 const int PR = 35;					// Player Radius
 const int PM = 10;					// Player Mass
-const int PFC = 0;				// Player Friction Coefficient
+const int PFC = 0;					// Player Friction Coefficient
 
 int main()
 {
@@ -43,12 +43,11 @@ int main()
 		StaticCircle(GW / 2, sf::Vector2f(GL,		Y - GP + GW / 2)),
 		StaticCircle(GW / 2, sf::Vector2f(X - GL,	GP + GW / 2)),
 		StaticCircle(GW / 2, sf::Vector2f(X - GL,	Y - GP + GW / 2)),
-		
-		StaticCircle(GW, sf::Vector2f(X / 2 + 100,	Y / 2 - 100))
 	};
 
 	std::vector<DynamicCircle> dynamicCircles = {
-		DynamicCircle(sf::Vector2f(X / 2, Y / 2), PR, PM, PFC)
+		DynamicCircle(sf::Vector2f(X / 2, Y / 2), PR, PM, PFC),
+		DynamicCircle(sf::Vector2f(X / 2 + 100, Y / 2 - 100), PR, PM, PFC)
 	};
 	dynamicCircles[0].setVelocity(sf::Vector2f(SV, -SV));
 

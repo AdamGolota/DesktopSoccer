@@ -23,6 +23,7 @@ public:
 	sf::Vector2f distance(StaticCircle& target);
 	sf::Vector2f distance(StaticRect& target);
 	sf::Vector2f distance(sf::Vector2f& point);
+	sf::Vector2f postStaticHitVelocity(sf::Vector2f distance);
 	bool inRange(sf::Vector2f point);
 	bool checkCollision(DynamicCircle target);
 	bool checkCollision(StaticCircle& barrier);
@@ -39,6 +40,5 @@ private:
 
 
 float length(const sf::Vector2f& v);
-sf::Vector2f postStaticHitVelocity(const sf::Vector2f& velocity, const float& contactAngle);
 float angle(const sf::Vector2f&, const sf::Vector2f&);
 float angle(const sf::Vector2f&);

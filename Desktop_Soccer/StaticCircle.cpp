@@ -15,6 +15,11 @@ sf::Vector2f StaticCircle::getCenter()
 	return this->center;
 }
 
+float StaticCircle::getRadius()
+{
+	return this->R;
+}
+
 
 StaticCircle::~StaticCircle()
 {

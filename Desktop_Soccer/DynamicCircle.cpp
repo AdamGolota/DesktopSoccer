@@ -31,15 +31,12 @@ void DynamicCircle::hit(DynamicCircle& target)
 
 void DynamicCircle::hit(StaticCircle & barrier)
 {
-	sf::Vector2f d = this->distance(barrier);
-	float ca = angle(this->distance(barrier)) * (d.y > 0 ? -1 : 1); // contact angle
-	this->velocity = postStaticHitVelocity(this->velocity, ca);
+	this->velocity = this->postStaticHitVelocity(this->distance(barrier));
 }
 
 void DynamicCircle::hit(StaticRect & barrier)
 {
-	float ca = angle(this->distance(barrier)); // contact angle
-	this->velocity = postStaticHitVelocity(this->velocity, ca);
+	this->velocity = this->postStaticHitVelocity(this->distance(barrier));
 }
 
 void DynamicCircle::slowDown()
@@ -121,6 +118,17 @@ sf::Vector2f DynamicCircle::distance(sf::Vector2f & point)
 	return distance;
 }
 
+sf::Vector2f DynamicCircle::postStaticHitVelocity(sf::Vector2f distance)
+{
+	float dl = length(distance);
+	// normal velocity length
+	float nvl = (this->velocity.x * distance.x + this->velocity.y * distance.y)/length(distance); 
+	// normal velocity
+	sf::Vector2f nv = distance * (nvl / dl);
+	sf::Vector2f newVelocity = this->velocity - (nv * 2.f);
+	return newVelocity;
+}
+
 bool DynamicCircle::inRange(sf::Vector2f point)
 {
 	bool inRange = length(this->distance(point)) < this->R;
@@ -170,19 +178,6 @@ sf::Vector2f postHitVelocity(DynamicCircle & object, DynamicCircle & target)
 float length(const sf::Vector2f& v) {
 	float length = sqrt(pow(v.x, 2) + pow(v.y, 2));
 	return length;
-}
-
-sf::Vector2f postStaticHitVelocity(const sf::Vector2f & velocity, const float & contactAngle)
-{
-	float v = length(velocity);
-	float va = angle(velocity) * (velocity.y > 0 ? -1 : 1);
-	float ca = contactAngle;
-	sf::Vector2f constVelocity;
-	constVelocity.x = v * cos(PI / 2 - ca) * sin(ca + va);
-	constVelocity.y = v * sin(PI / 2 - ca) * sin(ca + va);
-	sf::Vector2f normalVelocity = velocity - constVelocity;
-	sf::Vector2f newVelocity = constVelocity - normalVelocity;
-	return newVelocity;
 }
 
 

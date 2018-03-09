@@ -4,13 +4,13 @@ class StaticRect
 {
 public:
 	StaticRect();
-	StaticRect(sf::Vector2f position, float length, float width);
+	StaticRect(sf::Vector2f position, float x, float y);
 	sf::Vector2f getPosition();
-	float getAngle();
+	float getX();
+	float getY();
 	~StaticRect();
 private:
 	sf::Vector2f position;
-	float length;
-	float width;
-	float angle;
+	float y;
+	float x;
 };

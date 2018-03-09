@@ -123,12 +123,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="RoundSolidObject.cpp" />
+    <ClCompile Include="DynamicCircle.cpp" />
     <ClCompile Include="StaticCircle.cpp" />
     <ClCompile Include="StaticRect.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RoundSolidObject.h" />
+    <ClInclude Include="DesktopSoccer.h" />
+    <ClInclude Include="DynamicCircle.h" />
     <ClInclude Include="StaticCircle.h" />
     <ClInclude Include="StaticRect.h" />
   </ItemGroup>

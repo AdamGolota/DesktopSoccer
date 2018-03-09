@@ -6,6 +6,7 @@ public:
 	StaticCircle();
 	StaticCircle(float R, sf::Vector2f center);
 	sf::Vector2f getCenter();
+	float getRadius();
 	~StaticCircle();
 private:
 	float R;
