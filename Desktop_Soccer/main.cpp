@@ -13,8 +13,9 @@ const int GL = X / 10;				// Goal length
 const int GW = Y / 20;				// Goal width
 const int GP = Y / 2.75 - GW / 2;	// Goal position
 const int PR = 35;					// Player Radius
-const int PM = 10;					// Player Mass
-const int PFC = 0;					// Player Friction Coefficient
+const float PM = 1;					// Player Mass
+const float PMV = 15;				// Player Max Velocity
+const float PFC = 0.025;			// Player Friction Coefficient
 
 int main()
 {
@@ -46,10 +47,10 @@ int main()
 	};
 
 	std::vector<DynamicCircle> dynamicCircles = {
-		DynamicCircle(sf::Vector2f(X / 2, Y / 2), PR, PM, PFC),
-		DynamicCircle(sf::Vector2f(X / 2 + 100, Y / 2 - 100), PR, PM, PFC)
+		DynamicCircle(sf::Vector2f(X / 2, Y / 2), PR, PM, PFC, PMV),
+		DynamicCircle(sf::Vector2f(X / 2 + 100, Y / 2 - 100), PR, PM, PFC, PMV)
 	};
-	dynamicCircles[0].setVelocity(sf::Vector2f(SV, -SV));
+	dynamicCircles[0].setVelocity(sf::Vector2f(0, 0));
 
 
 
@@ -59,7 +60,8 @@ int main()
 
 	sf::Clock clock;
 	int time = 0;
-
+	bool staticHit;
+	DynamicCircle* capturedPlayerPointer = NULL;
 	// GAME TIMER
 
 	while (window.isOpen())
@@ -67,6 +69,7 @@ int main()
 		time += clock.restart().asMilliseconds();
 		if (time > TPM)
 		{
+			staticHit = 0;
 			time = 0;
 			for (int i = 0; i < dynamicCircles.size(); i++)
 			{
@@ -78,12 +81,15 @@ int main()
 					if (collision)
 					{
 						dynamicCircles[i].hit(staticCircles[j]);
+						staticHit = true;
 					}
 
 				}
 
 				for (int j = 0; j < staticRects.size(); j++)
 				{
+					if (staticHit) 
+						break;
 					bool collision = dynamicCircles[i].checkCollision(staticRects[j]);
 					if (collision)
 					{
@@ -96,8 +102,7 @@ int main()
 					bool collision = dynamicCircles[i].checkCollision(dynamicCircles[j]);
 					if (collision)
 					{
-						dynamicCircles[i].hit(dynamicCircles[j]);
-						dynamicCircles[j].hit(dynamicCircles[i]);
+						hit(dynamicCircles[i], dynamicCircles[j]);
 					}
 				}
 			}
@@ -106,11 +111,39 @@ int main()
 
 		// EVENT HANDLING
 
+
+
 		sf::Event event;
+
 		while (window.pollEvent(event))
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
+
+			if (event.type == sf::Event::MouseButtonPressed)
+			{
+				if (event.mouseButton.button == sf::Mouse::Left)
+				{
+					sf::Vector2f clickPoint(event.mouseButton.x, event.mouseButton.y);
+					for (int i = 0; i < dynamicCircles.size(); i++)
+					{
+						if (dynamicCircles[i].inRange(clickPoint))
+						{
+							capturedPlayerPointer = &dynamicCircles[i];
+						}
+					}
+				}
+			}
+			if (event.type == sf::Event::MouseButtonReleased)
+			{
+				sf::Vector2f releasePoint(event.mouseButton.x, event.mouseButton.y);
+				if (capturedPlayerPointer)
+				{
+					capturedPlayerPointer->pushInDirection(releasePoint);
+					capturedPlayerPointer = NULL;
+				}
+			}
+
 		}
 
 

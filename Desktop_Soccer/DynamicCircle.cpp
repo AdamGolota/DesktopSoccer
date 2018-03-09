@@ -3,13 +3,17 @@
 
 const float PI = 3.14159265359;
 
-DynamicCircle::DynamicCircle() : 
-	R(100), center(sf::Vector2f(0, 0)), velocity(sf::Vector2f(0,0)), M(100), frictionCoefficient(0)
+DynamicCircle::DynamicCircle() 
 {
 }
 
-DynamicCircle::DynamicCircle(const sf::Vector2f & center, const int & R, const int & M, const float & fc) : 
-	R(R), center(center), velocity(sf::Vector2f(0, 0)), M(M), frictionCoefficient(fc)
+DynamicCircle::DynamicCircle(	
+	const sf::Vector2f & center, 
+	const float & R, 
+	const float & M, 
+	const float & fc, 
+	const float & mv) : 
+	R(R), center(center), velocity(sf::Vector2f(0, 0)), M(M), frictionCoefficient(fc), maxVelocity(mv)
 {
 }
 
@@ -24,32 +28,39 @@ void DynamicCircle::move()
 	slowDown();
 }
 
-void DynamicCircle::hit(DynamicCircle& target)
-{
-	this->velocity = postHitVelocity(*this, target);
-}
 
 void DynamicCircle::hit(StaticCircle & barrier)
 {
-	this->velocity = this->postStaticHitVelocity(this->distance(barrier));
+	this->setVelocity(this->postStaticHitVelocity(this->distance(barrier)));
 }
 
 void DynamicCircle::hit(StaticRect & barrier)
 {
-	this->velocity = this->postStaticHitVelocity(this->distance(barrier));
+	this->setVelocity(this->postStaticHitVelocity(this->distance(barrier)));
 }
 
 void DynamicCircle::slowDown()
 {	
-	float acceleration = this->frictionCoefficient*this->M;
-	if (length(this->velocity) > acceleration)
+	float al = this->frictionCoefficient*this->M;	// acceleration length
+	sf::Vector2f v = this->velocity;				// velocity
+	float vl = length(this->velocity);
+	sf::Vector2f a = v * (al / vl);
+	if (vl > al)
 	{
-		float angle = acos(this->velocity.x / length(this->velocity));
-		this->velocity.x += acceleration * cos(angle);
-		this->velocity.y += acceleration * sin(angle);
+		this->setVelocity(sf::Vector2f(v - a));
 	}
 	else
-		this->velocity = sf::Vector2f(0,0);
+		this->setVelocity(sf::Vector2f(0,0));
+}
+
+void DynamicCircle::pushInDirection(sf::Vector2f point)
+{
+	const float dk = 25.f;										// distance coefficient
+	sf::Vector2f d = this->distance(point);				
+	float dl = length(d) / dk;								
+	float mv = this->maxVelocity;
+	float vl = sqrt(dl > mv ? mv*mv: dl * mv);			//Velocity length		
+	this->setVelocity(d / dk * (vl / dl));	
 }
 
 int DynamicCircle::setFrictionCoefficient(const float & fa)
@@ -120,13 +131,19 @@ sf::Vector2f DynamicCircle::distance(sf::Vector2f & point)
 
 sf::Vector2f DynamicCircle::postStaticHitVelocity(sf::Vector2f distance)
 {
-	float dl = length(distance);
-	// normal velocity length
-	float nvl = (this->velocity.x * distance.x + this->velocity.y * distance.y)/length(distance); 
-	// normal velocity
-	sf::Vector2f nv = distance * (nvl / dl);
+	sf::Vector2f nv = this->normalVelocity(distance);
 	sf::Vector2f newVelocity = this->velocity - (nv * 2.f);
 	return newVelocity;
+}
+
+sf::Vector2f DynamicCircle::normalVelocity(sf::Vector2f distance)
+{
+	float dl = length(distance);
+	// normal velocity length
+	float nvl = (this->velocity.x * distance.x + this->velocity.y * distance.y) / length(distance);
+	// normal velocity
+	sf::Vector2f nv = distance * (nvl / dl);
+	return nv;
 }
 
 bool DynamicCircle::inRange(sf::Vector2f point)
@@ -157,22 +174,24 @@ bool DynamicCircle::checkCollision(StaticRect & barrier)
 
 sf::Vector2f postHitVelocity(DynamicCircle & object, DynamicCircle & target)
 {
-
-	float ova = acos(object.velocity.x / length(object.velocity)); // object velocity angle
-	float tva = acos(target.velocity.x / length(target.velocity)); // target velocity angle
-	float ca = acos(object.distance(target).x / length(object.distance(target))); // contact angle
-	float v1 = length(object.velocity);
-	float v2 = length(target.velocity);
-	float m1 = object.M;
-	float m2 = target.M;
-	sf::Vector2f newVelocity;
-	newVelocity.x = (v1*cos(ova - ca)*(m1 - m2) + 2 * m2*v2*cos(tva - ca))*cos(ca) / (m1 + m2) +
-		v1 * sin(ova - ca) * cos(ca + PI / 2);
-	newVelocity.y = (v1*cos(ova - ca)*(m1 - m2) + 2 * m2*v2*cos(tva - ca))*sin(ca) / (m1 + m2) +
-		v1 * sin(ova - ca) * sin(ca + PI / 2);
-
+	sf::Vector2f distance = object.distance(target);
+	sf::Vector2f onv = object.normalVelocity(distance);						// Object normal velosity
+	sf::Vector2f tnv = target.normalVelocity(-distance); 					// Target normal velosity
+	// New normal velocity
+	sf::Vector2f nnv = (2.f * target.M * tnv + onv * (object.M - target.M)) / (object.M + target.M);
+	sf::Vector2f newVelocity = object.velocity - onv + nnv;
 	return newVelocity;
 }
+
+void hit(DynamicCircle& object, DynamicCircle& target)
+{
+	
+	sf::Vector2f ov = postHitVelocity(object, target);						// New object velocity
+	sf::Vector2f tv = postHitVelocity(target, object);						// New target velocity
+	object.setVelocity(ov);
+	target.setVelocity(tv);
+}
+
 
 
 float length(const sf::Vector2f& v) {

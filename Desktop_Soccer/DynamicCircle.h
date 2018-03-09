@@ -7,13 +7,18 @@ class DynamicCircle
 public:
 
 	DynamicCircle();
-	DynamicCircle(const sf::Vector2f& center, const int& R, const int& M, const float& frictionCoefficient);
+	DynamicCircle(
+		const sf::Vector2f& center, 
+		const float& R, 
+		const float& M, 
+		const float& frictionCoefficient, 
+		const float & maxVelocity);
 	~DynamicCircle();
 	void move();
-	void hit(DynamicCircle& target);
 	void hit(StaticCircle& barrier);
 	void hit(StaticRect& barrier);
 	void slowDown();
+	void pushInDirection(sf::Vector2f point);
 	int setFrictionCoefficient(const float& fa);
 	int setCenter(const sf::Vector2f& center);
 	int setVelocity(const sf::Vector2f& velocity);
@@ -24,16 +29,19 @@ public:
 	sf::Vector2f distance(StaticRect& target);
 	sf::Vector2f distance(sf::Vector2f& point);
 	sf::Vector2f postStaticHitVelocity(sf::Vector2f distance);
+	sf::Vector2f normalVelocity(sf::Vector2f distance);
 	bool inRange(sf::Vector2f point);
 	bool checkCollision(DynamicCircle target);
 	bool checkCollision(StaticCircle& barrier);
 	bool checkCollision(StaticRect& barrier);
 	friend sf::Vector2f postHitVelocity(DynamicCircle& object, DynamicCircle& target);
+	friend void hit(DynamicCircle& object, DynamicCircle& target);
 private:
+	float maxVelocity;
 	float frictionCoefficient;
 	sf::Vector2f center;
-	int R;
-	int M;
+	float R;
+	float M;
 	sf::Vector2f velocity;
 
 };
