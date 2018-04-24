@@ -17,6 +17,7 @@ public:
 	void move();
 	void hit(StaticCircle& barrier);
 	void hit(StaticRect& barrier);
+	void hit(DynamicCircle& target);
 	void slowDown();
 	void pushInDirection(sf::Vector2f point);
 	int setFrictionCoefficient(const float& fa);
@@ -34,8 +35,7 @@ public:
 	bool checkCollision(DynamicCircle target);
 	bool checkCollision(StaticCircle& barrier);
 	bool checkCollision(StaticRect& barrier);
-	friend sf::Vector2f postHitVelocity(DynamicCircle& object, DynamicCircle& target);
-	friend void hit(DynamicCircle& object, DynamicCircle& target);
+	sf::Vector2f postHitVelocity( DynamicCircle& target);
 private:
 	float maxVelocity;
 	float frictionCoefficient;

@@ -124,14 +124,18 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="DynamicCircle.cpp" />
+    <ClCompile Include="SoccerPlayer.cpp" />
     <ClCompile Include="StaticCircle.cpp" />
     <ClCompile Include="StaticRect.cpp" />
+    <ClCompile Include="Team.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DesktopSoccer.h" />
     <ClInclude Include="DynamicCircle.h" />
+    <ClInclude Include="SoccerPlayer.h" />
     <ClInclude Include="StaticCircle.h" />
     <ClInclude Include="StaticRect.h" />
+    <ClInclude Include="Team.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

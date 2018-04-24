@@ -3,7 +3,7 @@
 #include <SFML/System/Vector2.hpp>
 #include <vector>
 #include "DesktopSoccer.h"
-
+#include "Team.h"
 const float PI = 3.14159265359;
 const float SV = 1.0f;				// Standard Velocity
 const int TPM = 10;					// Time Per Move (ms)
@@ -14,12 +14,16 @@ const int GW = Y / 20;				// Goal width
 const int GP = Y / 2.75 - GW / 2;	// Goal position
 const int PR = 35;					// Player Radius
 const float PM = 1;					// Player Mass
-const float PMV = 15;				// Player Max Velocity
-const float PFC = 0.025;			// Player Friction Coefficient
+const float MV = 15;				// Max Velocity
+const float FC = 0.025;				// Friction Coefficient
+const float BR = 20;				// Ball radius
+const float BM = 0.5;				// Ball mass
+
+
 
 int main()
 {
-	
+
 	// SOLID OBJECTS
 
 	std::vector<StaticRect> staticRects = {
@@ -46,15 +50,23 @@ int main()
 		StaticCircle(GW / 2, sf::Vector2f(X - GL,	Y - GP + GW / 2)),
 	};
 
-	std::vector<DynamicCircle> dynamicCircles = {
-		DynamicCircle(sf::Vector2f(X / 2, Y / 2), PR, PM, PFC, PMV),
-		DynamicCircle(sf::Vector2f(X / 2 + 100, Y / 2 - 100), PR, PM, PFC, PMV)
+
+	std::vector<SoccerPlayer> soccerPlayers = {
+		// PLAYERS
+		SoccerPlayer(sf::Vector2f(X / 4,		Y / 5), PR, PM, FC, MV),
+		SoccerPlayer(sf::Vector2f(X * 2 / 5,	Y * 1 / 2), PR, PM, FC, MV),
+		SoccerPlayer(sf::Vector2f(X / 4,		Y * 4 / 5), PR, PM, FC, MV),
+		SoccerPlayer(sf::Vector2f(X - X / 4,		Y / 5), PR, PM, FC, MV),
+		SoccerPlayer(sf::Vector2f(X - X * 2 / 5,	Y * 1 / 2), PR, PM, FC, MV),
+		SoccerPlayer(sf::Vector2f(X - X / 4,		Y * 4 / 5), PR, PM, FC, MV),
 	};
-	dynamicCircles[0].setVelocity(sf::Vector2f(0, 0));
+
+	DynamicCircle ball(sf::Vector2f(X * 1 / 2, Y * 1 / 2), BR, BM, FC, MV);
 
 
+	// TEAMS
 
-
+	Team teams[2];
 
 	sf::RenderWindow window(sf::VideoMode(X, Y), "DesktopSoccer");
 
@@ -62,6 +74,7 @@ int main()
 	int time = 0;
 	bool staticHit;
 	DynamicCircle* capturedPlayerPointer = NULL;
+
 	// GAME TIMER
 
 	while (window.isOpen())
@@ -71,16 +84,16 @@ int main()
 		{
 			staticHit = 0;
 			time = 0;
-			for (int i = 0; i < dynamicCircles.size(); i++)
+			for (int i = 0; i < soccerPlayers.size(); i++)
 			{
-				dynamicCircles[i].move();
+				soccerPlayers[i].move();
 
 				for (int j = 0; j < staticCircles.size(); j++)
 				{
-					bool collision = dynamicCircles[i].checkCollision(staticCircles[j]);
+					bool collision = soccerPlayers[i].checkCollision(staticCircles[j]);
 					if (collision)
 					{
-						dynamicCircles[i].hit(staticCircles[j]);
+						soccerPlayers[i].hit(staticCircles[j]);
 						staticHit = true;
 					}
 
@@ -90,19 +103,19 @@ int main()
 				{
 					if (staticHit) 
 						break;
-					bool collision = dynamicCircles[i].checkCollision(staticRects[j]);
+					bool collision = soccerPlayers[i].checkCollision(staticRects[j]);
 					if (collision)
 					{
-						dynamicCircles[i].hit(staticRects[j]);
+						soccerPlayers[i].hit(staticRects[j]);
 					}
 				}
 
-				for (int j = i + 1; j < dynamicCircles.size(); j++)
+				for (int j = i + 1; j < soccerPlayers.size(); j++)
 				{
-					bool collision = dynamicCircles[i].checkCollision(dynamicCircles[j]);
+					bool collision = soccerPlayers[i].checkCollision(soccerPlayers[j]);
 					if (collision)
 					{
-						hit(dynamicCircles[i], dynamicCircles[j]);
+						soccerPlayers[i].hit(soccerPlayers[j]);
 					}
 				}
 			}
@@ -125,11 +138,11 @@ int main()
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
 					sf::Vector2f clickPoint(event.mouseButton.x, event.mouseButton.y);
-					for (int i = 0; i < dynamicCircles.size(); i++)
+					for (int i = 0; i < soccerPlayers.size(); i++)
 					{
-						if (dynamicCircles[i].inRange(clickPoint))
+						if (soccerPlayers[i].inRange(clickPoint))
 						{
-							capturedPlayerPointer = &dynamicCircles[i];
+							capturedPlayerPointer = &soccerPlayers[i];
 						}
 					}
 				}
@@ -169,12 +182,12 @@ int main()
 			window.draw(shape);
 		}
 
-		for (int i = 0; i < dynamicCircles.size(); i++)
+		for (int i = 0; i < soccerPlayers.size(); i++)
 		{
-			float r = dynamicCircles[i].getRadius();
+			float r = soccerPlayers[i].getRadius();
 			sf::CircleShape shape(r);
 			shape.setOrigin(sf::Vector2f(r, r));
-			shape.setPosition(dynamicCircles[i].getCenter());
+			shape.setPosition(soccerPlayers[i].getCenter());
 			window.draw(shape);
 		}
 

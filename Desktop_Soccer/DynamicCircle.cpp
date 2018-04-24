@@ -44,6 +44,17 @@ void DynamicCircle::hit(StaticRect & barrier)
 	this->setVelocity(this->postStaticHitVelocity(this->distance(barrier)));
 }
 
+void DynamicCircle::hit(DynamicCircle & target)
+{
+	sf::Vector2f d = this->distance(target);
+	float rs = this->getRadius() + target.getRadius();						//	Radius sum
+	this->setCenter(this->center + d * (1 - rs / length(d)));
+	sf::Vector2f ov = this->postHitVelocity( target);						// New object velocity
+	sf::Vector2f tv = target.postHitVelocity(*this);						// New target velocity
+	this->setVelocity(ov);
+	target.setVelocity(tv);
+}
+
 void DynamicCircle::slowDown()
 {	
 	float al = this->frictionCoefficient*this->M;					// acceleration length
@@ -177,28 +188,16 @@ bool DynamicCircle::checkCollision(StaticRect & barrier)
 	return collide;
 }
 
-sf::Vector2f postHitVelocity(DynamicCircle & object, DynamicCircle & target)
+sf::Vector2f DynamicCircle::postHitVelocity(DynamicCircle & target)
 {
-	sf::Vector2f distance = object.distance(target);
-	sf::Vector2f onv = object.normalVelocity(distance);						// Object normal velosity
+	sf::Vector2f distance = this->distance(target);
+	sf::Vector2f onv = this->normalVelocity(distance);						// Object normal velosity
 	sf::Vector2f tnv = target.normalVelocity(-distance); 					// Target normal velosity
-	// New normal velocity
-	sf::Vector2f nnv = (2.f * target.M * tnv + onv * (object.M - target.M)) / (object.M + target.M);
-	sf::Vector2f newVelocity = object.velocity - onv + nnv;
+																			// New normal velocity
+	sf::Vector2f nnv = (2.f * target.M * tnv + onv * (this->M - target.M)) / (this->M + target.M);
+	sf::Vector2f newVelocity = this->velocity - onv + nnv;
 	return newVelocity;
 }
-
-void hit(DynamicCircle& object, DynamicCircle& target)
-{
-	sf::Vector2f d = object.distance(target);
-	float rs = object.getRadius() + target.getRadius();						//	Radius sum
-	object.setCenter(object.center + d * (1 - rs / length(d)));
-	sf::Vector2f ov = postHitVelocity(object, target);						// New object velocity
-	sf::Vector2f tv = postHitVelocity(target, object);						// New target velocity
-	object.setVelocity(ov);
-	target.setVelocity(tv);
-}
-
 
 
 float length(const sf::Vector2f& v) {
