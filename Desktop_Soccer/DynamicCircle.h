@@ -36,7 +36,6 @@ public:
 	bool checkCollision(StaticCircle& barrier);
 	bool checkCollision(StaticRect& barrier);
 	sf::Vector2f postHitVelocity( DynamicCircle& target);
-private:
 	float maxVelocity;
 	float frictionCoefficient;
 	sf::Vector2f center;

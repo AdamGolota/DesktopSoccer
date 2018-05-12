@@ -3,21 +3,21 @@
 #include <SFML/System/Vector2.hpp>
 #include <vector>
 #include "DesktopSoccer.h"
-#include "Team.h"
-const float PI = 3.14159265359;
-const float SV = 1.0f;				// Standard Velocity
-const int TPM = 10;					// Time Per Move (ms)
-const int X = 800;
-const int Y = 500;
-const int GL = X / 10;				// Goal length
-const int GW = Y / 20;				// Goal width
+Parameters p("parameters.txt");
+
+const float PI = p["PI"];
+const int TPM = p["TPM"];				// Time Per Move (ms)
+const int X = p["X"];
+const int Y = p["Y"];
+const int GL = X / 12;				// Goal length
+const int GW = Y / 45;				// Goal width
 const int GP = Y / 2.75 - GW / 2;	// Goal position
-const int PR = 35;					// Player Radius
-const float PM = 1;					// Player Mass
-const float MV = 15;				// Max Velocity
-const float FC = 0.025;				// Friction Coefficient
-const float BR = 20;				// Ball radius
-const float BM = 0.5;				// Ball mass
+const int PR = p["PR"];					// Player Radius
+const float PM = p["PM"];					// Player Mass
+const float MV = p["MV"];				// Max Velocity
+const float FC = p["FC"];				// Friction Coefficient
+const float BR = p["BR"];				// Ball radius
+const float BM = p["BM"];				// Ball mass
 
 
 
@@ -64,14 +64,32 @@ int main()
 	DynamicCircle ball(sf::Vector2f(X * 1 / 2, Y * 1 / 2), BR, BM, FC, MV);
 
 
-	// TEAMS
+	std::vector<DynamicCircle*> dynamicCircles;
+	dynamicCircles.reserve(6);
+	for (int i = 0; i < soccerPlayers.size(); i++)
+	{
+		dynamicCircles.push_back(&soccerPlayers[i]);
+	}
+	dynamicCircles.push_back(&ball);
 
+
+	// TEAMS
 	Team teams[2];
+	teams[0].setNumber(0);
+	teams[1].setNumber(1);
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			teams[i] += soccerPlayers[i*3 + j];
+		}
+	}
 
 	sf::RenderWindow window(sf::VideoMode(X, Y), "DesktopSoccer");
 
 	sf::Clock clock;
 	int time = 0;
+	bool currentTeam = 0;
 	bool staticHit;
 	DynamicCircle* capturedPlayerPointer = NULL;
 
@@ -84,16 +102,16 @@ int main()
 		{
 			staticHit = 0;
 			time = 0;
-			for (int i = 0; i < soccerPlayers.size(); i++)
+			for (int i = 0; i < dynamicCircles.size(); i++)
 			{
-				soccerPlayers[i].move();
+				dynamicCircles[i]->move();
 
 				for (int j = 0; j < staticCircles.size(); j++)
 				{
-					bool collision = soccerPlayers[i].checkCollision(staticCircles[j]);
+					bool collision = dynamicCircles[i]->checkCollision(staticCircles[j]);
 					if (collision)
 					{
-						soccerPlayers[i].hit(staticCircles[j]);
+						dynamicCircles[i]->hit(staticCircles[j]);
 						staticHit = true;
 					}
 
@@ -103,63 +121,65 @@ int main()
 				{
 					if (staticHit) 
 						break;
-					bool collision = soccerPlayers[i].checkCollision(staticRects[j]);
+					bool collision = dynamicCircles[i]->checkCollision(staticRects[j]);
 					if (collision)
 					{
-						soccerPlayers[i].hit(staticRects[j]);
+						dynamicCircles[i]->hit(staticRects[j]);
 					}
 				}
 
-				for (int j = i + 1; j < soccerPlayers.size(); j++)
+				for (int j = i + 1; j < dynamicCircles.size(); j++)
 				{
-					bool collision = soccerPlayers[i].checkCollision(soccerPlayers[j]);
+					bool collision = dynamicCircles[i]->checkCollision(*dynamicCircles[j]);
 					if (collision)
 					{
-						soccerPlayers[i].hit(soccerPlayers[j]);
+						dynamicCircles[i]->hit(*dynamicCircles[j]);
 					}
 				}
 			}
 		}
 
 
-		// EVENT HANDLING
-
-
-
-		sf::Event event;
-
-		while (window.pollEvent(event))
 		{
-			if (event.type == sf::Event::Closed)
-				window.close();
+			// EVENT HANDLING
 
-			if (event.type == sf::Event::MouseButtonPressed)
+
+			sf::Event event;
+
+			while (window.pollEvent(event))
 			{
-				if (event.mouseButton.button == sf::Mouse::Left)
+				if (event.type == sf::Event::Closed)
+					window.close();
+
+				if (event.type == sf::Event::MouseButtonPressed)
 				{
-					sf::Vector2f clickPoint(event.mouseButton.x, event.mouseButton.y);
-					for (int i = 0; i < soccerPlayers.size(); i++)
+					if (event.mouseButton.button == sf::Mouse::Left)
 					{
-						if (soccerPlayers[i].inRange(clickPoint))
+						sf::Vector2f clickPoint(event.mouseButton.x, event.mouseButton.y);
+						for (int i = 0; i < soccerPlayers.size(); i++)
 						{
-							capturedPlayerPointer = &soccerPlayers[i];
+							if (soccerPlayers[i].inRange(clickPoint) &&
+								soccerPlayers[i].team->getNumber() == Team::getCurrentTeam())
+							{
+								capturedPlayerPointer = &soccerPlayers[i];
+							}
 						}
 					}
 				}
-			}
-			if (event.type == sf::Event::MouseButtonReleased)
-			{
-				sf::Vector2f releasePoint(event.mouseButton.x, event.mouseButton.y);
-				if (capturedPlayerPointer)
+				if (event.type == sf::Event::MouseButtonReleased)
 				{
-					capturedPlayerPointer->pushInDirection(releasePoint);
-					capturedPlayerPointer = NULL;
+					sf::Vector2f releasePoint(event.mouseButton.x, event.mouseButton.y);
+					if (capturedPlayerPointer)
+					{
+						capturedPlayerPointer->pushInDirection(releasePoint);
+						capturedPlayerPointer = NULL;
+						Team::currentTeam = !Team::currentTeam;
+					}
 				}
+
 			}
 
 		}
-
-
 
 		window.clear();
 
@@ -188,8 +208,15 @@ int main()
 			sf::CircleShape shape(r);
 			shape.setOrigin(sf::Vector2f(r, r));
 			shape.setPosition(soccerPlayers[i].getCenter());
+			shape.setFillColor(soccerPlayers[i].team->getNumber() ? sf::Color::Red : sf::Color::Blue);
 			window.draw(shape);
 		}
+
+		float r = ball.getRadius();
+		sf::CircleShape shape(r);
+		shape.setOrigin(sf::Vector2f(r, r));
+		shape.setPosition(ball.getCenter());
+		window.draw(shape);
 
 		window.display();
 	}

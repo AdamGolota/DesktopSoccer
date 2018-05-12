@@ -12,6 +12,11 @@ SoccerPlayer::SoccerPlayer(
 {
 }
 
+SoccerPlayer::SoccerPlayer(DynamicCircle c) :
+	DynamicCircle(c.center, c.R, c.M, c.frictionCoefficient, c.maxVelocity)
+{
+}
+
 SoccerPlayer::SoccerPlayer()
 {
 }
@@ -19,4 +24,9 @@ SoccerPlayer::SoccerPlayer()
 
 SoccerPlayer::~SoccerPlayer()
 {
+}
+
+void SoccerPlayer::setTeam(Team *team)
+{
+	this->team = team;
 }

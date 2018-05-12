@@ -57,9 +57,10 @@ void DynamicCircle::hit(DynamicCircle & target)
 
 void DynamicCircle::slowDown()
 {	
-	float al = this->frictionCoefficient*this->M;					// acceleration length
 	sf::Vector2f v = this->velocity;								// velocity
 	float vl = length(this->velocity);
+	float al = vl * this->frictionCoefficient*this->M;					// acceleration length
+
 	sf::Vector2f a = v * (al / vl);
 	if (vl > al)
 	{
