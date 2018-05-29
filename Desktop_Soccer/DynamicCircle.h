@@ -2,7 +2,7 @@
 #include "StaticCircle.h"
 #include "StaticRect.h"
 #pragma once
-class DynamicCircle
+class DynamicCircle : public SolidObject
 {
 public:
 
@@ -32,7 +32,7 @@ public:
 	sf::Vector2f postStaticHitVelocity(sf::Vector2f distance);
 	sf::Vector2f normalVelocity(sf::Vector2f distance);
 	bool inRange(sf::Vector2f point);
-	bool checkCollision(DynamicCircle target);
+	bool checkCollision(DynamicCircle& target);
 	bool checkCollision(StaticCircle& barrier);
 	bool checkCollision(StaticRect& barrier);
 	sf::Vector2f postHitVelocity( DynamicCircle& target);

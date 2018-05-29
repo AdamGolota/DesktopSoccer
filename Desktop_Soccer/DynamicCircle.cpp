@@ -169,7 +169,7 @@ bool DynamicCircle::inRange(sf::Vector2f point)
 	return inRange;
 }
 
-bool DynamicCircle::checkCollision(DynamicCircle target)
+bool DynamicCircle::checkCollision(DynamicCircle& target)
 {
 	float tr = target.getRadius();
 	bool collide = length(this->distance(target)) - tr < this->R;

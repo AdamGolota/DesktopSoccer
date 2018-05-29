@@ -5,3 +5,4 @@
 #include "SoccerPlayer.h"
 #include "Team.h"
 #include "Parameters.h"
+#include "SolidObject.h"
