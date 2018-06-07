@@ -3,6 +3,7 @@
 const unsigned scoreToWin = 5;
 
 bool Team::currentTeam = 0;
+int Team::moveTime;
 
 Team::Team() : score(0)
 {
@@ -46,4 +47,16 @@ int Team::goal()
 	if (this->score == scoreToWin)
 		return 1;
 	return 0;
+}
+
+void Team::switchTeam()
+{
+	Team::currentTeam = !Team::currentTeam;
+	Team::moveTime = 0;
+	
+}
+
+void Team::dropScore()
+{
+	this->score = 0;
 }

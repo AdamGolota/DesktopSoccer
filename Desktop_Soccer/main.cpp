@@ -4,6 +4,9 @@
 #include <vector>
 #include "DesktopSoccer.h"
 #include "string"
+#include "thread"
+#include "sstream"
+#include "Windows.h"
 
 Parameters p("parameters.txt");
 
@@ -24,15 +27,21 @@ const float BM = p["BM"];				// Ball mass
 std::vector<StaticRect> staticRects;
 std::vector<StaticCircle> staticCircles;
 std::vector<SoccerPlayer> soccerPlayers;
-DynamicCircle ball;
+DynamicCircle ball(sf::Vector2f(X * 1 / 2, Y * 1 / 2), BR, BM, FC, MV);
 
 int inGoal(DynamicCircle&);
 void setInitPos();
-void displayScore(int, int, sf::RenderWindow&);
 
 
 int main()
 {
+	staticRects.resize(8);
+	staticCircles.resize(4);
+	soccerPlayers.resize(6);
+	for (int i = 0; i < 6; i++)
+	{
+		soccerPlayers[i] = SoccerPlayer(sf::Vector2f(), PR, PM, FC, MV);
+	}
 	setInitPos();
 
 	std::vector<DynamicCircle*> dynamicCircles;
@@ -76,15 +85,26 @@ int main()
 
 	sf::Clock clock;
 	int time = 0;
+	sf::Clock moveTimer;
 	bool currentTeam = 0;
 	bool staticHit;
 	DynamicCircle* capturedPlayerPointer = NULL;
-
+	std::string fontname = "C:\\Users\\Adam\\source\\repos\\Desktop_Soccer\\Desktop_Soccer\\arial_narrow_7.ttf";
+	std::stringstream score;
+	score << 0 << " : " << 0;
+	sf::Font font;
+	font.loadFromFile(fontname);
+	sf::Text text;
+	text.setPosition(20, 20);
+	text.setFont(font);
+	text.setCharacterSize(30);
+	text.setString(score.str());
 	// GAME TIMER
 
 	while (window.isOpen())
 	{
 		time += clock.restart().asMilliseconds();
+		Team::moveTime += moveTimer.restart().asMilliseconds();
 		if (time > TPM)
 		{
 			staticHit = 0;
@@ -93,17 +113,37 @@ int main()
 			{
 				dynamicCircles[i]->move();
 				
+				if (Team::moveTime > 5000)
+				{
+					Team::switchTeam();
+				}
+
+
 				int goal = inGoal(ball);
+				bool endOfGame;
 				if (goal)
 				{
-					if (goal == -1)
-						teams[0].goal();
-					if (goal == 1)
-						teams[1].goal();
-					displayScore(teams[0].getScore(), teams[1].getScore(), window);
+					if (goal == -1) {
+						endOfGame = teams[0].goal();
+						Team::currentTeam = teams[0].getNumber();
+					}
+					if (goal == 1) {
+						endOfGame = teams[1].goal();
+						Team::currentTeam = teams[1].getNumber();
+					}
+					if (endOfGame)
+					{
+						teams[0].dropScore();
+						teams[1].dropScore();
+					}
+					score.str("");
+					score << teams[0].getScore() << " : " << teams[1].getScore();
+					text.setString(score.str());
 					setInitPos();
+					sf::sleep(sf::seconds(1));
 					break;
 				}
+
 				for (auto object : solidObjects)
 				{
 					if (object == dynamicCircles[i])
@@ -151,7 +191,7 @@ int main()
 					{
 						capturedPlayerPointer->pushInDirection(releasePoint);
 						capturedPlayerPointer = NULL;
-						Team::currentTeam = !Team::currentTeam;
+						Team::switchTeam();
 					}
 				}
 
@@ -201,9 +241,10 @@ int main()
 		shape.setPosition(ball.getCenter());
 		window.draw(shape);
 
+		window.draw(text);
+
 		window.display();
 	}
-
 	return 0;
 }
 
@@ -212,10 +253,10 @@ int inGoal(DynamicCircle& ball)
 {
 	bool team1Goal = ball.getCenter().x > X - GL &&
 		ball.getCenter().y > GP + GW / 2 &&
-		ball.getCenter().y > Y - GP + GW / 2;
+		ball.getCenter().y < Y - GP + GW / 2;
 	bool team2Goal = ball.getCenter().x < GL &&
 		ball.getCenter().y > GP + GW / 2 &&
-		ball.getCenter().y > Y - GP + GW / 2;
+		ball.getCenter().y < Y - GP + GW / 2;
 	if (team1Goal)
 		return -1;
 	if (team2Goal)
@@ -226,59 +267,55 @@ int inGoal(DynamicCircle& ball)
 void setInitPos()
 {
 	// SOLID OBJECTS
+	// Borders
 
-	 staticRects = {
-		// Borders
-		StaticRect(sf::Vector2f(0,		0),		X, 5),
-		StaticRect(sf::Vector2f(0,		0),		5, Y),
-		StaticRect(sf::Vector2f(0,		Y - 5), X, 5),
-		StaticRect(sf::Vector2f(X - 5,	0),	5, Y),
+	staticRects[0] = StaticRect(sf::Vector2f(0, 0), X, 5);
+	staticRects[1] = StaticRect(sf::Vector2f(0, 0), 5, Y);
+	staticRects[2] = StaticRect(sf::Vector2f(0, Y - 5), X, 5);
+	staticRects[3] = StaticRect(sf::Vector2f(X - 5, 0), 5, Y);
 
-		// Goals
-		StaticRect(sf::Vector2f(0,		GP),		GL, GW),
-		StaticRect(sf::Vector2f(0,		Y - GP),	GL, GW),
-		StaticRect(sf::Vector2f(X - GL, GP),		GL, GW),
-		StaticRect(sf::Vector2f(X - GL, Y - GP),	GL, GW)
-	};
+	// Goals
+	staticRects[4] = StaticRect(sf::Vector2f(0, GP), GL, GW);
+	staticRects[5] = StaticRect(sf::Vector2f(0, Y - GP), GL, GW);
+	staticRects[6] = StaticRect(sf::Vector2f(X - GL, GP), GL, GW);
+	staticRects[7] = StaticRect(sf::Vector2f(X - GL, Y - GP), GL, GW);
+
+	// Goal posts
+	staticCircles[0] = StaticCircle(GW / 2, sf::Vector2f(GL, GP + GW / 2));
+	staticCircles[1] = StaticCircle(GW / 2, sf::Vector2f(GL, Y - GP + GW / 2));
+	staticCircles[2] = StaticCircle(GW / 2, sf::Vector2f(X - GL, GP + GW / 2));
+	staticCircles[3] = StaticCircle(GW / 2, sf::Vector2f(X - GL, Y - GP + GW / 2));
 
 
-	staticCircles = {
+		//DYNAMIC CIRCLES
 
-		// Goal posts
-		StaticCircle(GW / 2, sf::Vector2f(GL,		GP + GW / 2)),
-		StaticCircle(GW / 2, sf::Vector2f(GL,		Y - GP + GW / 2)),
-		StaticCircle(GW / 2, sf::Vector2f(X - GL,	GP + GW / 2)),
-		StaticCircle(GW / 2, sf::Vector2f(X - GL,	Y - GP + GW / 2)),
-	};
 
-	//DYNAMIC CIRCLES
-
-	soccerPlayers = {
 		// PLAYERS
-		SoccerPlayer(sf::Vector2f(X / 4,		Y / 5), PR, PM, FC, MV),
-		SoccerPlayer(sf::Vector2f(X * 2 / 5,	Y * 1 / 2), PR, PM, FC, MV),
-		SoccerPlayer(sf::Vector2f(X / 4,		Y * 4 / 5), PR, PM, FC, MV),
-		SoccerPlayer(sf::Vector2f(X - X / 4,		Y / 5), PR, PM, FC, MV),
-		SoccerPlayer(sf::Vector2f(X - X * 2 / 5,	Y * 1 / 2), PR, PM, FC, MV),
-		SoccerPlayer(sf::Vector2f(X - X / 4,		Y * 4 / 5), PR, PM, FC, MV),
-	};
+	soccerPlayers[0].setCenter(sf::Vector2f(X / 4, Y / 5));
+	soccerPlayers[1].setCenter(sf::Vector2f(X * 2 / 5, Y * 1 / 2));
+	soccerPlayers[2].setCenter(sf::Vector2f(X / 4, Y * 4 / 5));
+	soccerPlayers[3].setCenter(sf::Vector2f(X - X / 4, Y / 5));
+	soccerPlayers[4].setCenter(sf::Vector2f(X - X * 2 / 5, Y * 1 / 2));
+	soccerPlayers[5].setCenter(sf::Vector2f(X - X / 4, Y * 4 / 5));
+	for (int i = 0; i < 6; i++)
+	{
+		soccerPlayers[i].setVelocity(sf::Vector2f(0.f, 0.f));
+	}
 
 	ball.setCenter(sf::Vector2f(X * 1 / 2, Y * 1 / 2));
+	ball.setVelocity(sf::Vector2f(0,0));
 }
 
-void displayScore(int s1, int s2, sf::RenderWindow& window)
-{
-	std::string fontname = "C:\\Users\\Adam\\source\\repos\\Desktop_Soccer\\Desktop_Soccer\\arial_narrow_7.ttf";
-	std::string score = s1 + " : " + s2;
-	sf::Font font;
-	font.loadFromFile(fontname);
-	sf::Text text(score, font, 60);
-	window.draw(text);
-	
-	sf::Clock clock;
-	int time = 0;
-	do {
-		time += clock.restart().asMilliseconds();
-	} while (time < 3000);
-	window.clear();
-}
+//void displayScore(int s1, int s2, sf::RenderWindow& window)
+//{
+//	std::string fontname = "C:\\Users\\Adam\\source\\repos\\Desktop_Soccer\\Desktop_Soccer\\arial_narrow_7.ttf";
+//	std::string score = s1 + " : " + s2;
+//	sf::Font font;
+//	font.loadFromFile(fontname);
+//	sf::Text text(score, font, 60);
+//	window.draw(text);
+//	window.display();
+//	sf::Clock clock;
+//	int time = 0;
+//	sf::sleep(sf::seconds(3));
+//}

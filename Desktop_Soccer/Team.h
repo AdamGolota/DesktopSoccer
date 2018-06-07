@@ -13,6 +13,9 @@ public:
 	static bool getCurrentTeam();
 	unsigned getScore();
 	int goal();
+	static void switchTeam();
+	static int moveTime;
+	void dropScore();
 
 	static bool currentTeam;
 private:
